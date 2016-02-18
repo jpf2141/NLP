@@ -16,41 +16,50 @@ def calc_probabilities(training_corpus):
     unigram_p = {}
     bigram_p = {}
     trigram_p = {}
-    
     unigram_tuples = []
     bigram_tuples = []
     trigram_tuples = []
-    word_count = 0
-
+    word_total = 0
+    bigram_total = 0
+    trigram_total = 0
+    
 
     for line in training_corpus:
         
         line = START_SYMBOL + " " + line + " " + STOP_SYMBOL
         tokens = line.split()
-        print tokens
-        
-        word_count = word_count + (len(tokens)-1)
+        line_bigrams = list(nltk.bigrams(tokens))
+        line_trigrams = list(nltk.trigrams(tokens))
         
         unigram_tuples.extend(tokens)
-        bigram_tuples.extend(list(nltk.bigrams(tokens)))
-        trigram_tuples.extend(list(nltk.trigrams(tokens)))
+        bigram_tuples.extend(line_bigrams)
+        trigram_tuples.extend(line_trigrams)
+    
+        word_total = word_total + (len(tokens)-1)
 
     unigram_counts = Counter(unigram_tuples)
-    bigram_counts =  Counter(bigram_tuples)
-    trigram_counts = Counter(trigram_tuples)
 
-    
+    bigram_total = Counter(bigram_tuples).values()
+    trigram_total = Counter(trigram_tuples).values()
+
     for word, count in unigram_counts.items():
-        probability = 1.0 * count / word_count
-        log_probability = math.log(prob, 2)
+        probability = 1.0 * count / word_total
+        log_probability = math.log(probability, 2)
         
         unigram = tuple([word])
         unigram_p[unigram] = log_probability
-    
-#    for i, j in bigram_counts.items():
-#    
-#    for i, j in trigram_counts.items():
 
+    for word, count in bigram_counts.items():
+        probability = 1.0 * count / bigram_total
+        log_probability = math.log(probability, 2)
+        
+        bigram_p[word] = log_probability
+#
+    for word, count in trigram_counts.items():
+        probability = 1.0 * count / trigram_total
+        log_probability = math.log(probability, 2)
+        
+        trigram_p[word] = log_probability
 
     return unigram_p, bigram_p, trigram_p
 
