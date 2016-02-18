@@ -23,10 +23,9 @@ def calc_probabilities(training_corpus):
     bigram_total = 0
     trigram_total = 0
     
-
     for line in training_corpus:
         
-        line = START_SYMBOL + " " + line + " " + STOP_SYMBOL
+        line = START_SYMBOL + " " + START_SYMBOL + " " + line + " " + STOP_SYMBOL
         tokens = line.split()
         line_bigrams = list(nltk.bigrams(tokens))
         line_trigrams = list(nltk.trigrams(tokens))
@@ -35,31 +34,34 @@ def calc_probabilities(training_corpus):
         bigram_tuples.extend(line_bigrams)
         trigram_tuples.extend(line_trigrams)
     
-        word_total = word_total + (len(tokens)-1)
+        word_total = word_total + (len(tokens) - 2)
+        bigram_total = bigram_total + (len(line_bigrams) - 1)
+        trigram_total = trigram_total + (len(line_trigrams))
 
     unigram_counts = Counter(unigram_tuples)
+    bigram_counts = Counter(bigram_tuples)
+    trigram_counts = Counter(trigram_tuples)
 
-    bigram_total = Counter(bigram_tuples).values()
-    trigram_total = Counter(trigram_tuples).values()
-
-    for word, count in unigram_counts.items():
-        probability = 1.0 * count / word_total
-        log_probability = math.log(probability, 2)
+    for unigram, unigram_count in unigram_counts.items():
+        probability = (1.0 * unigram_count)/ word_total
         
-        unigram = tuple([word])
+        log_probability = math.log(probability, 2)
+        unigram = tuple([unigram])
         unigram_p[unigram] = log_probability
 
-    for word, count in bigram_counts.items():
-        probability = 1.0 * count / bigram_total
-        log_probability = math.log(probability, 2)
+    for bigram, bigram_count in bigram_counts.items():
+        unigram_count = unigram_counts[bigram[0]]   #count of first word in bigram
         
-        bigram_p[word] = log_probability
-#
-    for word, count in trigram_counts.items():
-        probability = 1.0 * count / trigram_total
+        probability = (1.0 * bigram_count)/unigram_count   #conditional probability
         log_probability = math.log(probability, 2)
-        
-        trigram_p[word] = log_probability
+        bigram_p[bigram] = log_probability
+
+    for trigram, trigram_count in trigram_counts.items():
+        bigram_count = bigram_counts[(trigram[0], trigram[1])]
+
+        probability = (1.0 * trigram_count)/bigram_count
+        log_probability = math.log(probability, 2)
+        trigram_p[trigram] = log_probability
 
     return unigram_p, bigram_p, trigram_p
 
