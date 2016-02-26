@@ -24,7 +24,6 @@ def calc_probabilities(training_corpus):
     trigram_total = 0
     
     for line in training_corpus:
-        
         line = START_SYMBOL + " " + START_SYMBOL + " " + line + " " + STOP_SYMBOL
         tokens = line.split()
         line_bigrams = list(nltk.bigrams(tokens))
@@ -85,7 +84,6 @@ def q1_output(unigrams, bigrams, trigrams, filename):
     trigrams_keys.sort()    
     for trigram in trigrams_keys:
         outfile.write('TRIGRAM ' + trigram[0] + ' ' + trigram[1] + ' ' + trigram[2] + ' ' + str(trigrams[trigram]) + '\n')
-
     outfile.close()
 
 
@@ -97,6 +95,38 @@ def q1_output(unigrams, bigrams, trigrams, filename):
 # This function must return a python list of scores, where the first element is the score of the first sentence, etc. 
 def score(ngram_p, n, corpus):
     scores = []
+    for line in corpus:
+        product = 0;
+        if n == 1:
+            line = line + " " + STOP_SYMBOL
+            tokens = line.split()
+            for token in tokens:
+                myTuple = tuple([token])
+                if(myTuple in ngram_p):
+                    probability = ngram_p[myTuple]
+                    product += probability
+                else: product = MINUS_INFINITY_SENTENCE_LOG_PROB
+            scores.append(product)
+        elif n == 2:
+            line = START_SYMBOL + " " + line + " " + STOP_SYMBOL
+            tokens = line.split()
+            line_bigrams = list(nltk.bigrams(tokens))
+            for bigram in line_bigrams:
+                if(bigram in ngram_p):
+                    probability = ngram_p[bigram]
+                    product += probability
+                else: product = MINUS_INFINITY_SENTENCE_LOG_PROB - 1
+            scores.append(product + 1 )
+        elif n == 3:
+            line = START_SYMBOL + " " + START_SYMBOL + " " + line + " " + STOP_SYMBOL
+            tokens = line.split()
+            line_trigrams = list(nltk.trigrams(tokens))
+            for trigram in line_trigrams:
+                if(trigram in ngram_p):
+                    probability = ngram_p[trigram]
+                    product += probability
+                else: product = MINUS_INFINITY_SENTENCE_LOG_PROB
+            scores.append(product)
     return scores
 
 # Outputs a score to a file
@@ -114,6 +144,16 @@ def score_output(scores, filename):
 # Like score(), this function returns a python list of scores
 def linearscore(unigrams, bigrams, trigrams, corpus):
     scores = []
+    
+    lamba = 1.0/3
+    for line in corpus:
+        line = START_SYMBOL + " " + START_SYMBOL + " " + line + " " + STOP_SYMBOL
+        tokens = line.split()
+        for token in tokens[2:]:
+            
+    
+    
+    
     return scores
 
 DATA_PATH = 'data/'
