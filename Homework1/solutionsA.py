@@ -38,6 +38,7 @@ def calc_probabilities(training_corpus):
         trigram_total = trigram_total + (len(line_trigrams))
 
     unigram_counts = Counter(unigram_tuples)
+    unigram_counts[START_SYMBOL] /= 2
     bigram_counts = Counter(bigram_tuples)
     trigram_counts = Counter(trigram_tuples)
 
@@ -105,7 +106,9 @@ def score(ngram_p, n, corpus):
                 if(myTuple in ngram_p):
                     probability = ngram_p[myTuple]
                     product += probability
-                else: product = MINUS_INFINITY_SENTENCE_LOG_PROB
+                else:
+                    product = MINUS_INFINITY_SENTENCE_LOG_PROB
+                    break
             scores.append(product)
         elif n == 2:
             line = START_SYMBOL + " " + line + " " + STOP_SYMBOL
@@ -115,8 +118,10 @@ def score(ngram_p, n, corpus):
                 if(bigram in ngram_p):
                     probability = ngram_p[bigram]
                     product += probability
-                else: product = MINUS_INFINITY_SENTENCE_LOG_PROB - 1
-            scores.append(product + 1 )
+                else:
+                    product = MINUS_INFINITY_SENTENCE_LOG_PROB
+                    break
+            scores.append(product)
         elif n == 3:
             line = START_SYMBOL + " " + START_SYMBOL + " " + line + " " + STOP_SYMBOL
             tokens = line.split()
@@ -125,7 +130,9 @@ def score(ngram_p, n, corpus):
                 if(trigram in ngram_p):
                     probability = ngram_p[trigram]
                     product += probability
-                else: product = MINUS_INFINITY_SENTENCE_LOG_PROB
+                else:
+                    product = MINUS_INFINITY_SENTENCE_LOG_PROB
+                    break
             scores.append(product)
     return scores
 
@@ -160,6 +167,7 @@ def linearscore(unigrams, bigrams, trigrams, corpus):
             tokenIndex = tokenIndex + 1
             if (unigram not in  unigrams and bigram not in bigrams and trigram not in trigrams):
                 score = MINUS_INFINITY_SENTENCE_LOG_PROB
+                break
             else:
                 triProb = math.pow(2, trigrams.get(trigram, MINUS_INFINITY_SENTENCE_LOG_PROB))
                 biProb = math.pow(2, bigrams.get(bigram, MINUS_INFINITY_SENTENCE_LOG_PROB))

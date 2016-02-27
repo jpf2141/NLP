@@ -139,8 +139,32 @@ def q3_output(rare, filename):
 # The second return value is a set of all possible tags for this data set
 def calc_emission(brown_words_rare, brown_tags):
     e_values = {}
+    pos_counter = {}
     taglist = set([])
     
+    
+    for sentence_index, sentence in enumerate(brown_words_rare):
+        sentence_tag_list = brown_tags[sentence_index]
+        for word_index, word in enumerate(sentence):
+            pos = sentence_tag_list[word_index]
+            if (pos in pos_counter):
+                pos_counter[pos] = pos_counter[pos] + 1
+            else:
+                pos_counter[pos] = 1
+                taglist.add(pos)
+            
+            e_tuple = tuple([word, pos])
+            if (e_tuple in e_values):
+                e_values[e_tuple] = e_values[e_tuple] + 1
+            else:
+                e_values[e_tuple] = 1
+
+    for key, value in e_values.items():
+        pos_count = pos_counter[key[1]]
+    
+        probability = (1.0 * value)/pos_count
+        log_probability = math.log(probability, 2)
+        e_values[key] = log_probability
     
     return e_values, taglist
 
@@ -169,6 +193,12 @@ def q4_output(e_values, filename):
 # original words of the sentence!
 def viterbi(brown_dev_words, taglist, known_words, q_values, e_values):
     tagged = []
+    
+    for sentence in brown_dev_words:
+        for word in sentence:
+            emission = e_values[word]
+            transition = q_values[word]
+    
     return tagged
 
 # This function takes the output of viterbi() and outputs it to file
