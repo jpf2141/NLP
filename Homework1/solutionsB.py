@@ -2,6 +2,8 @@ import sys
 import nltk
 import math
 import time
+from collections import Counter
+
 
 START_SYMBOL = '*'
 STOP_SYMBOL = 'STOP'
@@ -19,6 +21,28 @@ LOG_PROB_OF_ZERO = -1000
 def split_wordtags(brown_train):
     brown_words = []
     brown_tags = []
+    
+    for line in brown_train:
+        sentence_words = []
+        sentence_tags = []
+        
+        tokens = line.split()
+        sentence_words.append(START_SYMBOL)
+        sentence_words.append(START_SYMBOL)
+        sentence_tags.append(START_SYMBOL)
+        sentence_tags.append(START_SYMBOL)
+            
+        for token in tokens:
+            token = token.rsplit('/', 1)   #split only once on first /, reading right to left
+            sentence_words.append(token[0])
+            sentence_tags.append(token[1])
+
+        sentence_words.append(STOP_SYMBOL)
+        sentence_tags.append(STOP_SYMBOL)
+
+        brown_words.append(sentence_words)
+        brown_tags.append(sentence_tags)
+
     return brown_words, brown_tags
 
 
@@ -27,6 +51,31 @@ def split_wordtags(brown_train):
 # It returns a python dictionary where the keys are tuples that represent the tag trigram, and the values are the log probability of that trigram
 def calc_trigrams(brown_tags):
     q_values = {}
+    bigram_tuples = []
+    trigram_tuples = []
+    bigram_total = 0
+    trigram_total = 0
+    
+    for tag_list in brown_tags:
+        tag_bigrams = list(nltk.bigrams(tag_list))
+        tag_trigrams = list(nltk.trigrams(tag_list))
+    
+        bigram_tuples.extend(tag_bigrams)
+        trigram_tuples.extend(tag_trigrams)
+    
+        bigram_total = bigram_total + (len(bigram_tuples) - 1)
+        trigram_total = trigram_total + (len(trigram_tuples))
+    
+    bigram_counts = Counter(bigram_tuples)
+    trigram_counts = Counter(trigram_tuples)
+    
+    for trigram, trigram_count in trigram_counts.items():
+        bigram_count = bigram_counts[(trigram[0], trigram[1])]
+        
+        probability = (1.0 * trigram_count)/bigram_count
+        log_probability = math.log(probability, 2)
+        q_values[trigram] = log_probability
+    
     return q_values
 
 # This function takes output from calc_trigrams() and outputs it in the proper format
@@ -46,6 +95,17 @@ def q2_output(q_values, filename):
 # Note: words that appear exactly 5 times should be considered rare!
 def calc_known(brown_words):
     known_words = set([])
+    words = []
+    
+    for word_list in brown_words:
+        for word in word_list:
+            words.append(word)
+    word_counts = dict(Counter(words))
+    
+    for key, value in word_counts.items():
+        if value > RARE_WORD_MAX_FREQ:
+            known_words.add(key)
+
     return known_words
 
 # TODO: IMPLEMENT THIS FUNCTION
@@ -53,6 +113,15 @@ def calc_known(brown_words):
 # Returns the equivalent to brown_words but replacing the unknown words by '_RARE_' (use RARE_SYMBOL constant)
 def replace_rare(brown_words, known_words):
     brown_words_rare = []
+    
+    for word_list in brown_words:
+        new_list = []
+        for word in word_list:
+            if word in known_words:
+                new_list.append(word)
+            else:
+                new_list.append(RARE_SYMBOL)
+        brown_words_rare.append(new_list)
     return brown_words_rare
 
 # This function takes the ouput from replace_rare and outputs it to a file
@@ -71,6 +140,8 @@ def q3_output(rare, filename):
 def calc_emission(brown_words_rare, brown_tags):
     e_values = {}
     taglist = set([])
+    
+    
     return e_values, taglist
 
 # This function takes the output from calc_emissions() and outputs it

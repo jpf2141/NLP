@@ -145,15 +145,29 @@ def score_output(scores, filename):
 def linearscore(unigrams, bigrams, trigrams, corpus):
     scores = []
     
-    lamba = 1.0/3
+
     for line in corpus:
+        score = 0
+        LMDA = 1.0/3
+        tokenIndex = 2
         line = START_SYMBOL + " " + START_SYMBOL + " " + line + " " + STOP_SYMBOL
         tokens = line.split()
         for token in tokens[2:]:
+            trigram = tuple([tokens[tokenIndex-2], tokens[tokenIndex-1], token])
+            bigram = tuple([trigram[1], trigram[2]])
+            unigram = tuple([bigram[1]])
             
-    
-    
-    
+            tokenIndex = tokenIndex + 1
+            if (unigram not in  unigrams and bigram not in bigrams and trigram not in trigrams):
+                score = MINUS_INFINITY_SENTENCE_LOG_PROB
+            else:
+                triProb = math.pow(2, trigrams.get(trigram, MINUS_INFINITY_SENTENCE_LOG_PROB))
+                biProb = math.pow(2, bigrams.get(bigram, MINUS_INFINITY_SENTENCE_LOG_PROB))
+                uniProb = math.pow(2, unigrams.get(unigram, MINUS_INFINITY_SENTENCE_LOG_PROB))
+            
+                score += math.log(((triProb + biProb + uniProb) * LMDA), 2)
+            
+        scores.append(score)
     return scores
 
 DATA_PATH = 'data/'
