@@ -75,7 +75,6 @@ def calc_trigrams(brown_tags):
         probability = (1.0 * trigram_count)/bigram_count
         log_probability = math.log(probability, 2)
         q_values[trigram] = log_probability
-    
     return q_values
 
 # This function takes output from calc_trigrams() and outputs it in the proper format
@@ -165,7 +164,6 @@ def calc_emission(brown_words_rare, brown_tags):
         probability = (1.0 * value)/pos_count
         log_probability = math.log(probability, 2)
         e_values[key] = log_probability
-    
     return e_values, taglist
 
 # This function takes the output from calc_emissions() and outputs it
@@ -193,12 +191,114 @@ def q4_output(e_values, filename):
 # original words of the sentence!
 def viterbi(brown_dev_words, taglist, known_words, q_values, e_values):
     tagged = []
-    
+    taglist = list(taglist)
+
     for sentence in brown_dev_words:
+
+        sentence.insert(0,START_SYMBOL)
+        sentence.insert(0,START_SYMBOL)
+        sentence.append(STOP_SYMBOL)
+        pointer = {}
+        back_pointer = {}
+        pointer[(0, START_SYMBOL, START_SYMBOL)] = 0
+        pointer[(1, START_SYMBOL, START_SYMBOL)] = 0
+        sentence_length = len(sentence)
+        temp_sentence = list(sentence)
+
+        rare_counter = 0
         for word in sentence:
-            emission = e_values[word]
-            transition = q_values[word]
-    
+            if word not in known_words:
+                sentence[rare_counter] = RARE_SYMBOL
+            rare_counter += 1
+
+        for word_index, word in enumerate(sentence):
+            if word_index == 2:
+                for tag1 in taglist:
+                    max_probability = LOG_PROB_OF_ZERO
+                    tag_trigram = (START_SYMBOL, START_SYMBOL, tag1)
+                    wordtag = (sentence[word_index], tag1)
+                    if tag_trigram in q_values and wordtag in e_values:
+                        transition = q_values[tag_trigram]
+                        emission = e_values[wordtag]
+                        probability = transition + emission
+                        if transition + emission >= max_probability:
+                            max_probability = transition + emission
+                    back_pointer[(word_index, START_SYMBOL, tag1)] = START_SYMBOL
+                    pointer[(word_index, START_SYMBOL, tag1)] = max_probability
+
+            elif word_index == 3:
+                for tag1 in taglist:
+                    for tag2 in taglist:
+                        previous_pos = taglist[0]
+                        max_probability = LOG_PROB_OF_ZERO
+                        wordtag = (sentence[word_index], tag2)
+                        tag_trigram = (START_SYMBOL, tag1, tag2)
+                        temp_tuple = (word_index - 1, START_SYMBOL, tag1)
+                        if tag_trigram in q_values and wordtag in e_values and temp_tuple in pointer:
+                            transition = q_values[tag_trigram]
+                            emission = e_values[wordtag]
+                            probability = pointer[temp_tuple] + transition + emission
+                            if probability >= max_probability:
+                                max_probability = probability
+                                previous_pos = START_SYMBOL
+                        back_pointer[(word_index, tag1, tag2)] = previous_pos
+                        pointer[(word_index, tag1, tag2)] = max_probability
+
+            elif word_index > 3 and word_index < sentence_length:
+                for tag1 in taglist:
+                    for tag2 in taglist:
+                        previous_pos = taglist[0]
+                        max_probability = LOG_PROB_OF_ZERO
+                        wordtag = (sentence[word_index], tag2)
+                        for tag3 in taglist:
+                            tag_trigram = (tag3, tag1, tag2)
+                            temp_tuple = (word_index - 1, tag3, tag1)
+                            if tag_trigram in q_values and wordtag in e_values and temp_tuple in pointer:
+                                transition = q_values[tag_trigram]
+                                emission = e_values[wordtag]
+                                probability = pointer[temp_tuple] + transition + emission
+                                if probability >= max_probability:
+                                    max_probability = probability
+                                    previous_pos = tag3
+                        back_pointer[(word_index, tag1, tag2)] = previous_pos
+                        pointer[(word_index, tag1, tag2)] = max_probability
+
+        max_probability = LOG_PROB_OF_ZERO
+        for tag1 in taglist:
+            for tag2 in taglist:
+                tag_trigram = (tag1, tag2, 'STOP')
+                if tag_trigram in q_values:
+                    transition = q_values[tag_trigram]
+                    pointer_probability = pointer[(sentence_length - 2, tag1, tag2)]
+                    probability = transition + pointer_probability
+                    if probability >= max_probability:
+                        max_probability = probability
+                        mle_tuple = tag_trigram
+
+        pos_endtag = []
+        pos_endtag = [None] * sentence_length
+        pos_endtag[0] = mle_tuple[2]
+        pos_endtag[1] = mle_tuple[1]
+        pos_endtag[2] = mle_tuple[0]
+
+        for word_index, word in enumerate(sentence):
+            if word_index < sentence_length - 5:
+                tuple1 = sentence_length - 2 - word_index
+                tuple2 = pos_endtag[word_index + 2]
+                tuple3 = pos_endtag[word_index + 1]
+                back_pointer_trigram = (tuple1, tuple2, tuple3)
+                pos_endtag[word_index + 3] = back_pointer[back_pointer_trigram]
+        
+        final_sentence = ''
+        for word_index, word in enumerate(sentence):
+            if word_index < sentence_length - 3:
+                word = temp_sentence[word_index + 2]
+                pos = pos_endtag[sentence_length - 3 - word_index]
+                final_sentence += word + '/' + pos + ' '
+        final_sentence = final_sentence[:-1]
+        final_sentence += '\n'
+        tagged.append(final_sentence)
+            
     return tagged
 
 # This function takes the output of viterbi() and outputs it to file
@@ -216,10 +316,23 @@ def q5_output(tagged, filename):
 # terminal newline, not a list of tokens. 
 def nltk_tagger(brown_words, brown_tags, brown_dev_words):
     # Hint: use the following line to format data to what NLTK expects for training
-    training = [ zip(brown_words[i],brown_tags[i]) for i in xrange(len(brown_words)) ]
+    training = [ zip(brown_words[i][2:-1],brown_tags[i][2:-1]) for i in xrange(len(brown_words)) ]
 
     # IMPLEMENT THE REST OF THE FUNCTION HERE
     tagged = []
+    
+    default_tagger = nltk.DefaultTagger('NOUN')
+    bigram_tagger = nltk.BigramTagger(training, backoff=default_tagger)
+    trigram_tagger = nltk.TrigramTagger(training, backoff=bigram_tagger)
+    
+    for sentence in brown_dev_words:
+        pos_tagged_sentence = trigram_tagger.tag(sentence)
+        tagged_sentence = ''
+        for tuple in pos_tagged_sentence:
+            word_tag = tuple[0] + '/' + tuple[1] + ' '
+            tagged_sentence += word_tag
+        tagged_sentence += "\n"
+        tagged.append(tagged_sentence)
     return tagged
 
 # This function takes the output of nltk_tagger() and outputs it to file
