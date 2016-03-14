@@ -3,16 +3,30 @@ from providedcode.transitionparser import TransitionParser
 from providedcode.evaluate import DependencyEvaluator
 from featureextractor import FeatureExtractor
 from transition import Transition
+import time
+import random
+
+
 
 if __name__ == '__main__':
     traindata = dataset.get_swedish_train_corpus().parsed_sents()
 
+#generate random sampling of training data
+    sample_size = 10
+    time_seed = lambda: int(round(time.time() * 1000))
+    random.seed(time_seed)
+    train_sample = random.sample(traindata, sample_size)
+
 
     try:
 
-        # tp = TransitionParser(Transition, FeatureExtractor)
-        # tp.train(traindata)
+        print "0"
+        tp = TransitionParser(Transition, FeatureExtractor)
+        print "1"
+        tp.train(train_sample)
+        print "2"
         # tp.save('swedish.model')
+        print "3"
 
         labeleddata = dataset.get_swedish_dev_corpus().parsed_sents()
         blinddata = dataset.get_swedish_dev_blind_corpus().parsed_sents()
