@@ -18,7 +18,16 @@ class Transition(object):
             :param configuration: is the current configuration
             :return : A new configuration or -1 if the pre-condition is not satisfied
         """
-        raise NotImplementedError('Please implement left_arc!')
+        #my code
+        
+
+        
+        
+        
+        
+        
+        
+        #raise NotImplementedError('Please implement left_arc!')
         return -1
 
     @staticmethod
@@ -32,6 +41,7 @@ class Transition(object):
 
         # You get this one for free! Use it as an example.
 
+
         idx_wi = conf.stack[-1]
         idx_wj = conf.buffer.pop(0)
 
@@ -44,7 +54,7 @@ class Transition(object):
             :param configuration: is the current configuration
             :return : A new configuration or -1 if the pre-condition is not satisfied
         """
-        raise NotImplementedError('Please implement reduce!')
+        #raise NotImplementedError('Please implement reduce!')
         return -1
 
     @staticmethod
@@ -53,5 +63,5 @@ class Transition(object):
             :param configuration: is the current configuration
             :return : A new configuration or -1 if the pre-condition is not satisfied
         """
-        raise NotImplementedError('Please implement shift!')
+        #raise NotImplementedError('Please implement shift!')
         return -1
