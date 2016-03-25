@@ -35,7 +35,7 @@ class Transition(object):
             return -1
         else:
             idx_wi = conf.stack[-1]  #check top of stack
-            idx_wj = conf.buffer.pop(0)
+            idx_wj = conf.buffer[0]
             arc = tuple([idx_wj, relation, idx_wi]) #new dependency arc
            
             #check to make sure wi is not a dependant of some other word

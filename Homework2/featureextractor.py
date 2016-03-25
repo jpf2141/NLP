@@ -1,3 +1,4 @@
+
 from nltk.compat import python_2_unicode_compatible
 
 printed = False
@@ -7,20 +8,20 @@ class FeatureExtractor(object):
     @staticmethod
     def _check_informative(feat, underscore_is_informative=False):
         """
-        Check whether a feature is informative
-        """
-
+            Check whether a feature is informative
+            """
+        
         if feat is None:
             return False
-
+        
         if feat == '':
             return False
-
+        
         if not underscore_is_informative and feat == '_':
             return False
-
+        
         return True
-
+    
     @staticmethod
     def find_left_right_dependencies(idx, arcs):
         left_most = 1000000
@@ -37,16 +38,16 @@ class FeatureExtractor(object):
                     dep_left_most = r
         return dep_left_most, dep_right_most
 
+
+
     @staticmethod
     def extract_features(tokens, buffer, stack, arcs):
         """
         This function returns a list of string features for the classifier
-
         :param tokens: nodes in the dependency graph
         :param stack: partially processed words
         :param buffer: remaining input words
         :param arcs: partially built dependency tree
-
         :return: list(str)
         """
 
@@ -54,20 +55,39 @@ class FeatureExtractor(object):
         Think of some of your own features here! Some standard features are
         described in Table 3.2 on page 31 of Dependency Parsing by Kubler,
         McDonald, and Nivre
-
         [http://books.google.com/books/about/Dependency_Parsing.html?id=k3iiup7HB9UC]
         """
 
         result = []
-
+        tags = []
+        depth_buffer = len(buffer)
 
         global printed
         if not printed:
             print("This is not a very good feature extractor!")
             printed = True
 
+
+
+        buffer_idx0 = buffer_idx1 = buffer_idx2 = buffer_idx3 = False
+        if depth_buffer >= 4:
+            buffer_idx0 = buffer[0]
+            buffer_idx1 = buffer[1]
+            buffer_idx2 = buffer[2]
+            buffer_idx3 = buffer[3]
+        elif depth_buffer >= 3:
+            buffer_idx0 = buffer[0]
+            buffer_idx1 = buffer[1]
+            buffer_idx2 = buffer[2]
+        elif depth_buffer >= 2:
+            buffer_idx0 = buffer[0]
+            buffer_idx1 = buffer[1]
+        elif depth_buffer == 1:
+            buffer_idx0 = buffer[0]
+
         # an example set of features:
         if stack:
+            size_stack = len(stack)
             stack_idx0 = stack[-1]
             token = tokens[stack_idx0]
             if FeatureExtractor._check_informative(token['word'], True):
@@ -86,8 +106,21 @@ class FeatureExtractor(object):
             if FeatureExtractor._check_informative(dep_right_most):
                 result.append('STK_0_RDEP_' + dep_right_most)
 
+#my features here
+            if 'tag' in token and FeatureExtractor._check_informative(token['tag']):
+                result.append('STK_0_POSTAG_' + token['tag'])
+
+            if 'ctag' in token and FeatureExtractor._check_informative(token['ctag']):
+                result.append('STK_0_CPOSTAG_' + token['ctag'])
+
+            if size_stack > 1:
+                stack_idx1 = stack[-2]
+                token = tokens[stack_idx1]
+                if 'tag' in token and FeatureExtractor._check_informative(token['tag']):
+                    result.append('STK_1_POSTAG_' + token['tag'])
+#end features
+
         if buffer:
-            buffer_idx0 = buffer[0]
             token = tokens[buffer_idx0]
             if FeatureExtractor._check_informative(token['word'], True):
                 result.append('BUF_0_FORM_' + token['word'])
@@ -104,4 +137,25 @@ class FeatureExtractor(object):
             if FeatureExtractor._check_informative(dep_right_most):
                 result.append('BUF_0_RDEP_' + dep_right_most)
 
-        return result
+#my features here
+            if 'tag' in token and FeatureExtractor._check_informative(token['tag']):
+                result.append('BUF_0_POSTAG_' + token['tag'])
+            if 'ctag' in token and FeatureExtractor._check_informative(token['ctag']):
+                result.append('BUF_0_CPOSTAG_' + token['ctag'])
+
+            if depth_buffer > 1:
+                token = tokens[buffer_idx1]
+                if 'tag' in token and FeatureExtractor._check_informative(token['tag']):
+                    result.append('BUF_1_POSTAG_' + token['tag'])
+                if FeatureExtractor._check_informative(token['word'], True):
+                    result.append('BUF_1_FORM_' + token['word'])
+
+
+            if depth_buffer > 2:
+                token = tokens[buffer_idx2]
+                if 'tag' in token and FeatureExtractor._check_informative(token['tag']):
+                    result.append('BUF_2_POSTAG_' + token['tag'])
+#end features
+        return result 
+
+
