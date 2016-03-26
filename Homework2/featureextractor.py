@@ -59,35 +59,15 @@ class FeatureExtractor(object):
         """
 
         result = []
-        tags = []
-        depth_buffer = len(buffer)
 
         global printed
         if not printed:
-            print("This is not a very good feature extractor!")
+            #print("This is not a very good feature extractor!")
             printed = True
-
-
-
-        buffer_idx0 = buffer_idx1 = buffer_idx2 = buffer_idx3 = False
-        if depth_buffer >= 4:
-            buffer_idx0 = buffer[0]
-            buffer_idx1 = buffer[1]
-            buffer_idx2 = buffer[2]
-            buffer_idx3 = buffer[3]
-        elif depth_buffer >= 3:
-            buffer_idx0 = buffer[0]
-            buffer_idx1 = buffer[1]
-            buffer_idx2 = buffer[2]
-        elif depth_buffer >= 2:
-            buffer_idx0 = buffer[0]
-            buffer_idx1 = buffer[1]
-        elif depth_buffer == 1:
-            buffer_idx0 = buffer[0]
 
         # an example set of features:
         if stack:
-            size_stack = len(stack)
+            stack_size = len(stack)
             stack_idx0 = stack[-1]
             token = tokens[stack_idx0]
             if FeatureExtractor._check_informative(token['word'], True):
@@ -107,13 +87,14 @@ class FeatureExtractor(object):
                 result.append('STK_0_RDEP_' + dep_right_most)
 
 #my features here
+            if 'lemma' in token and FeatureExtractor._check_informative(token['lemma']):
+                result.append('STK_0_LEMMA_' + token['lemma'])
             if 'tag' in token and FeatureExtractor._check_informative(token['tag']):
                 result.append('STK_0_POSTAG_' + token['tag'])
-
             if 'ctag' in token and FeatureExtractor._check_informative(token['ctag']):
                 result.append('STK_0_CPOSTAG_' + token['ctag'])
 
-            if size_stack > 1:
+            if stack_size > 1:
                 stack_idx1 = stack[-2]
                 token = tokens[stack_idx1]
                 if 'tag' in token and FeatureExtractor._check_informative(token['tag']):
@@ -121,6 +102,8 @@ class FeatureExtractor(object):
 #end features
 
         if buffer:
+            buffer_size = len(buffer)
+            buffer_idx0 = buffer[0]
             token = tokens[buffer_idx0]
             if FeatureExtractor._check_informative(token['word'], True):
                 result.append('BUF_0_FORM_' + token['word'])
@@ -138,20 +121,22 @@ class FeatureExtractor(object):
                 result.append('BUF_0_RDEP_' + dep_right_most)
 
 #my features here
+
+            if 'lemma' in token and FeatureExtractor._check_informative(token['lemma']):
+                result.append('BUF_0_LEMMA_' + token['lemma'])
             if 'tag' in token and FeatureExtractor._check_informative(token['tag']):
                 result.append('BUF_0_POSTAG_' + token['tag'])
             if 'ctag' in token and FeatureExtractor._check_informative(token['ctag']):
                 result.append('BUF_0_CPOSTAG_' + token['ctag'])
 
-            if depth_buffer > 1:
+            if buffer_size > 1:
+                buffer_idx1 = buffer[1]
                 token = tokens[buffer_idx1]
                 if 'tag' in token and FeatureExtractor._check_informative(token['tag']):
                     result.append('BUF_1_POSTAG_' + token['tag'])
-                if FeatureExtractor._check_informative(token['word'], True):
-                    result.append('BUF_1_FORM_' + token['word'])
 
-
-            if depth_buffer > 2:
+            if buffer_size > 2:
+                buffer_idx2 = buffer[2]
                 token = tokens[buffer_idx2]
                 if 'tag' in token and FeatureExtractor._check_informative(token['tag']):
                     result.append('BUF_2_POSTAG_' + token['tag'])

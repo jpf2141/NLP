@@ -8,23 +8,23 @@ from datetime import datetime
 import random
 
 if __name__ == '__main__':
-    traindata = dataset.get_swedish_train_corpus().parsed_sents()
+    traindata = dataset.get_english_train_corpus().parsed_sents()
 
-    sample_size = 500
-    dt = datetime.now()
-    time_seed = dt.microsecond % 10000
-    print dt, time_seed
-    random.seed(time_seed)
-    training_sample = random.sample(traindata, sample_size)
+#    sample_size = 500
+#    dt = datetime.now()
+#    time_seed = dt.microsecond % 10000
+#    print dt, time_seed
+#    random.seed(time_seed)
+#    training_sample = random.sample(traindata, sample_size)
 
     try:
         
         tp = TransitionParser(Transition, FeatureExtractor)
-        tp.train(training_sample)
-        tp.save('swedish.model')
+        tp.train(traindata)
+        tp.save('english.model')
         
-        labeleddata = dataset.get_swedish_dev_corpus().parsed_sents()
-        blinddata = dataset.get_swedish_dev_blind_corpus().parsed_sents()
+        labeleddata = dataset.get_english_dev_corpus().parsed_sents()
+        blinddata = dataset.get_english_dev_blind_corpus().parsed_sents()
         #tp = TransitionParser.load('badfeatures.model')
         
         parsed = tp.parse(blinddata)
