@@ -1,16 +1,16 @@
 import json
-
 from math import sqrt
 from collections import OrderedDict, defaultdict
-
 import theano
 import theano.tensor as T
-
 import numpy as np
-
 from adagrad import Adagrad
 
+BASE_CONST = .999
+
+
 class DependencyRNN:
+    
     '''
     class for dependency RNN for QANTA
     '''
@@ -66,10 +66,19 @@ class DependencyRNN:
 
         def normalized_tanh(x):
             '''returns tanh(x) / ||tanh(x)||'''
-            raise NotImplementedError
-            
+            temp = T.tanh(x)
+            temp_2 = T.sqrt(T.sum(T.tanh(x**2)))
+            return temp/temp_2
+        
         self.f = normalized_tanh
+        
+        def func(wrong_ans, result_prev, corr_ans, h_n):
+            sum_corr = T.dot(corr_ans, h_n)
+            sum_wrong = T.dot(wrong_ans, h_n)
+            result_new = T.maximum(0.0, (BASE_CONST - sum_corr ) + sum_wrong)
+            return result_prev + result_new
 
+        #added
         #TODO: make this over tensors so we can do minibatches
         #need to calculate both the input to its parent node and the error at this step
         def recurrence(n, hidden_states, hidden_sums, cost, x, r, p, wrong_ans, corr_ans):
@@ -95,7 +104,26 @@ class DependencyRNN:
             you need to return the updates to hidden_states, hidden_sums, and cost
             (in that order)
             '''
-            raise NotImplementedError
+            
+            #1) The value of hidden_states[n] : h_n = f(W_v \dot x_n + b + sum_n)
+            sum = T.dot(self.Wv, x[n])
+            h_n = self.f( sum + self.b + hidden_sums[n] )
+            hidden_states_updated = T.set_subtensor( hidden_states[n], h_n )
+            
+            #2) The updated value of hidden_sums[p[n]] : hidden_sums[p[n]] + W_r(n) \dot h_n
+            sum = T.dot(r[n], h_n)
+            hidden_sums_updated = T.set_subtensor( hidden_sums[ p[n] ], sum)
+            
+            #3) The updated cost :
+            #for a single node, this is \sum_{z \in wrong_ans} max(0, 1 - x_c \dot h_n + x_z \dot h_n)
+            info = T.as_tensor_variable(np.asarray(0, theano.config.floatX))
+            result , updates = theano.scan(fn = func, sequences=wrong_ans,
+                    outputs_info= info, non_sequences=[corr_ans, h_n])
+            cost_updated = result[-1] + cost
+            
+            return hidden_states_updated, hidden_sums_updated, cost_updated
+        
+        
 
         idxs = T.ivector('idxs')
         x = self.We[idxs]
@@ -204,6 +232,7 @@ class DependencyRNN:
         '''load pre-trained weights from a file'''
         with open(filename) as f:
             npzfile = np.load(f)
+
             
             d = npzfile['embeddings'].shape[1]
             V = npzfile['embeddings'].shape[0]
@@ -215,7 +244,7 @@ class DependencyRNN:
                 param.set_value(npzfile[param.name])
 
         with open(filename + '.json') as f:
-            self._answers = json.load(f)
+            d._answers = json.load(f)
 
         return d
 

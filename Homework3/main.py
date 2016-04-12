@@ -47,7 +47,7 @@ if __name__ == '__main__':
     print('number of dependency relations: {}'.format(len(dd.relations)))
     print('number of elements in vocabulary: {}'.format(len(dd.vocab)))
     print('number of unique answers: {}'.format(len(dd.answers)))
-    
+
     We = None
     if args.We:
         model = gensim.models.Word2Vec.load(args.We)
