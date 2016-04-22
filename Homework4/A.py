@@ -46,6 +46,7 @@ def save_model_output(aligned_sents, model, file_name):
 
 
 def main(aligned_sents):
+    
     ibm1 = create_ibm1(aligned_sents)
     save_model_output(aligned_sents, ibm1, "ibm1.txt")
     avg_aer = compute_avg_aer(aligned_sents, ibm1, 50)
@@ -61,3 +62,62 @@ def main(aligned_sents):
     print ('IBM Model 2')
     print ('---------------------------')
     print('Average AER: {0:.3f}\n'.format(avg_aer))
+
+
+
+###########################################
+#used to calculate optimal iteration counts
+###########################################
+#def main(aligned_sents):
+#    print ('IBM Model 1')
+#    for i in range(15):
+#        start_time = time.clock()
+#        ibm1 = create_ibm1(aligned_sents, i)
+#        save_model_output(aligned_sents, ibm1, "ibm1.txt")
+#        avg_aer = compute_avg_aer(aligned_sents, ibm1, 50)
+#        end_time = time.clock()
+#        timer = end_time - start_time
+#        timer = str(timer)
+#
+#
+#
+#
+#        #        print ('IBM Model 1')
+#        print "Iterations: " + str(i)
+#        print "Time: " + timer
+#        #        print ('---------------------------')
+#        print('Average AER: {0:.3f}\n'.format(avg_aer))
+#
+#
+#
+#    print "\n"
+#    print ('IBM Model 2')
+#    for i in range(15):
+#        start_time = time.clock()
+#        ibm2 = create_ibm2(aligned_sents, i)
+#        save_model_output(aligned_sents, ibm2, "ibm2.txt")
+#        avg_aer = compute_avg_aer(aligned_sents, ibm2, 50)
+#        end_time = time.clock()
+#        timer = end_time - start_time
+#        timer = str(timer)
+#
+#
+#
+#        #        print ('IBM Model 2')
+#        print "Iterations: " + str(i)
+#        print "Time: " + timer
+#        #        print ('---------------------------')
+#        print('Average AER: {0:.3f}\n'.format(avg_aer))
+#
+#
+#
+
+
+
+
+
+
+
+
+
+
